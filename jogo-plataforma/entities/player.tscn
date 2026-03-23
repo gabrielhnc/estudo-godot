@@ -1,14 +1,13 @@
 [gd_scene format=3 uid="uid://bitvcths0qfc4"]
 
 [ext_resource type="Script" uid="uid://cytgfm625jeyy" path="res://scripts/player.gd" id="1_merdl"]
-[ext_resource type="Texture2D" uid="uid://bj0ubcr4mfgwg" path="res://sprites/1 - Penguin/Idle (16 x 16).png" id="2_b0kkn"]
-[ext_resource type="Texture2D" uid="uid://j17noboa2gli" path="res://sprites/1 - Penguin/Falling (16 x 16).png" id="2_qly61"]
-[ext_resource type="Texture2D" uid="uid://dslmgoaos14yf" path="res://sprites/1 - Penguin/Waddling (16 x 16).png" id="3_e4p34"]
-[ext_resource type="Texture2D" uid="uid://crxamncd17u1q" path="res://sprites/1 - Penguin/Jump (16 x 16).png" id="4_qsoyl"]
+[ext_resource type="Texture2D" uid="uid://bj0ubcr4mfgwg" path="res://sprites/Characters/1 - Penguin/Idle (16 x 16).png" id="2_b0kkn"]
+[ext_resource type="Texture2D" uid="uid://j17noboa2gli" path="res://sprites/Characters/1 - Penguin/Falling (16 x 16).png" id="2_qly61"]
+[ext_resource type="Texture2D" uid="uid://dslmgoaos14yf" path="res://sprites/Characters/1 - Penguin/Waddling (16 x 16).png" id="3_e4p34"]
+[ext_resource type="Texture2D" uid="uid://crxamncd17u1q" path="res://sprites/Characters/1 - Penguin/Jump (16 x 16).png" id="4_qsoyl"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e4p34"]
-radius = 8.0
-height = 16.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qly61"]
+size = Vector2(16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_q0i8f"]
 atlas = ExtResource("2_qly61")
@@ -90,7 +89,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle",
-"speed": 30.0
+"speed": 10.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -121,21 +120,20 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk",
-"speed": 50.0
+"speed": 10.0
 }]
 
 [node name="Player" type="CharacterBody2D" unique_id=1259058155]
 script = ExtResource("1_merdl")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=416647039]
-shape = SubResource("CapsuleShape2D_e4p34")
+shape = SubResource("RectangleShape2D_qly61")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=82106886]
 z_index = 1
 sprite_frames = SubResource("SpriteFrames_i623q")
 animation = &"idle"
 autoplay = "idle"
-frame_progress = 0.77581984
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=958118039]
 limit_left = 0
