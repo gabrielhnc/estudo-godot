@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://n1wn16nivfcc"]
+
+[ext_resource type="PackedScene" uid="uid://dybelupbb0dil" path="res://entities/player-skeleton.tscn" id="1_jaeev"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u80x2"]
+size = Vector2(557, 101)
+
+[node name="start" type="Node2D" unique_id=2132183248]
+
+[node name="CharacterBody2D" parent="." unique_id=992306437 instance=ExtResource("1_jaeev")]
+position = Vector2(59, 130)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1882357941]
+position = Vector2(185, 227)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=741737267]
+shape = SubResource("RectangleShape2D_u80x2")
