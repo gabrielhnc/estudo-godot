@@ -11,6 +11,16 @@
 [ext_resource type="Texture2D" uid="uid://cv1ofpv8sx0k0" path="res://sprites/Characters/1 - Penguin/Blink (16 x 16).png" id="4_6nm46"]
 [ext_resource type="Texture2D" uid="uid://crxamncd17u1q" path="res://sprites/Characters/1 - Penguin/Jump (16 x 16).png" id="4_qsoyl"]
 [ext_resource type="Texture2D" uid="uid://dbm16xwv3ydrd" path="res://sprites/Characters/1 - Penguin/Belly_Sliding (16 x 16).png" id="7_i623q"]
+[ext_resource type="Script" uid="uid://draccqhf4esj8" path="res://scripts/StateMachine/idle_state.gd" id="12_dchgp"]
+[ext_resource type="Script" uid="uid://o3d3ubhkicuq" path="res://scripts/StateMachine/state.gd" id="12_q0i8f"]
+[ext_resource type="Script" uid="uid://b2k607h7vjb2r" path="res://scripts/StateMachine/state_machine.gd" id="13_0i614"]
+[ext_resource type="Script" uid="uid://vm81u62ocmmo" path="res://scripts/StateMachine/walk_state.gd" id="15_oprnr"]
+[ext_resource type="Script" uid="uid://bnhrecb2icf77" path="res://scripts/StateMachine/jump_state.gd" id="16_8rie4"]
+[ext_resource type="Script" uid="uid://qumx4u5vdpvw" path="res://scripts/StateMachine/fall_state.gd" id="17_8rie4"]
+[ext_resource type="Script" uid="uid://dgn6lupxlueu3" path="res://scripts/StateMachine/duck_state.gd" id="18_28s6d"]
+[ext_resource type="Script" uid="uid://bs465x2h45g8o" path="res://scripts/StateMachine/slide_state.gd" id="19_cicqb"]
+[ext_resource type="Script" uid="uid://db7x32p6utldl" path="res://scripts/StateMachine/dance_state.gd" id="20_hj0ki"]
+[ext_resource type="Script" uid="uid://cgimtsjpiskt6" path="res://scripts/StateMachine/dead_state.gd" id="21_fruft"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_6nm46"]
 radius = 6.0
@@ -267,6 +277,36 @@ shape = SubResource("CapsuleShape2D_6nm46")
 z_index = 1
 sprite_frames = SubResource("SpriteFrames_i623q")
 animation = &"idle"
+
+[node name="StateMachine" type="Node" parent="." unique_id=613585789]
+script = ExtResource("13_0i614")
+
+[node name="State" type="Node" parent="StateMachine" unique_id=1341572234]
+script = ExtResource("12_q0i8f")
+
+[node name="IdleState" type="Node" parent="StateMachine" unique_id=1811144993]
+script = ExtResource("12_dchgp")
+
+[node name="WalkState" type="Node" parent="StateMachine" unique_id=2132091733]
+script = ExtResource("15_oprnr")
+
+[node name="JumpState" type="Node" parent="StateMachine" unique_id=1468547101]
+script = ExtResource("16_8rie4")
+
+[node name="FallState" type="Node" parent="StateMachine" unique_id=302908712]
+script = ExtResource("17_8rie4")
+
+[node name="DuckState" type="Node" parent="StateMachine" unique_id=2015884538]
+script = ExtResource("18_28s6d")
+
+[node name="SlideState" type="Node" parent="StateMachine" unique_id=1290448825]
+script = ExtResource("19_cicqb")
+
+[node name="DanceState" type="Node" parent="StateMachine" unique_id=1268812230]
+script = ExtResource("20_hj0ki")
+
+[node name="DeadState" type="Node" parent="StateMachine" unique_id=235883954]
+script = ExtResource("21_fruft")
 
 [node name="HitBox" type="Area2D" parent="." unique_id=1171648477]
 visible = false

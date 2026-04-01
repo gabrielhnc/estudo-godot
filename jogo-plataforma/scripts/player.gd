@@ -1,247 +1,100 @@
 extends CharacterBody2D
 
-# REFERENCIAS DOS NÓS
+# ================================================================
+# REFERÊNCIAS DOS NÓS
+# ================================================================
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var hitbox_collision_shape: CollisionShape2D = $HitBox/CollisionShape2D
 @onready var reload_timer: Timer = $ReloadTimer
+@onready var state_machine: StateMachine = $StateMachine
 
-# DIREÇÃO INICIAL
-var direction = 0
+# Referências diretas aos estados para facilitar as transições
+@onready var idle_state: IdleState = $StateMachine/IdleState
+@onready var walk_state: WalkState = $StateMachine/WalkState
+@onready var jump_state: JumpState = $StateMachine/JumpState
+@onready var fall_state: FallState = $StateMachine/FallState
+@onready var duck_state: DuckState = $StateMachine/DuckState
+@onready var slide_state: SlideState = $StateMachine/SlideState
+@onready var dead_state: DeadState = $StateMachine/DeadState
+@onready var dance_state: DanceState = $StateMachine/DanceState
 
+# ================================================================
+# DIREÇÃO
+# ================================================================
+var direction: float = 0.0
+
+# ================================================================
 # VELOCIDADE / ACELERAÇÃO
-@export var max_speed = 130
-@export var acceleration = 1500
-@export var deceleration = 1500
+# ================================================================
+@export var max_speed: float = 130.0
+@export var acceleration: float = 1500.0
+@export var deceleration: float = 1500.0
 
+# ================================================================
 # SLIDE
-@export var slide_deceleration = 200
-@export var slide_multiplicator = 1.8
+# ================================================================
+@export var slide_deceleration: float = 200.0
+@export var slide_multiplicator: float = 1.8
 
+# ================================================================
 # JUMP
-@export var max_jump_count = 2
-var jump_count = 0
-const JUMP_VELOCITY = -250
+# ================================================================
+@export var max_jump_count: int = 2
+@export var jump_velocity: float = -250.0
+var jump_count: int = 0
 
-# POSSIVEIS ESTADOS DO PLAYER (FSM -> FINITE STATE MACHINE)
-enum PlayerState {
-	idle,
-	walk,
-	jump,
-	fall,
-	duck,
-	slide,
-	dead,
-	dance
-}
-
-var status: PlayerState
-
-# DEFINIÇÃO DO STATUS INICIAL AO INICIAR O JOGO
+# ================================================================
+# INICIALIZAÇÃO
+# ================================================================
 func _ready() -> void:
-	go_to_idle_state()
+	# Garante que cada instância tenha seu próprio shape (evita mutação compartilhada)
+	collision_shape.shape = collision_shape.shape.duplicate()
+	hitbox_collision_shape.shape = hitbox_collision_shape.shape.duplicate()
 
-# PROCESSO CONTÍNUO DO JOGO
-func _physics_process(delta: float) -> void:
+	state_machine.init(idle_state)
+
+# ================================================================
+# PROCESSO FÍSICO — gravity + move_and_slide ficam aqui
+# A lógica de estado fica nos arquivos de cada estado
+# ================================================================
+func _physics_process(_delta: float) -> void:
 	if not is_on_floor():
-		velocity += get_gravity() * delta
-
-	match status:
-		PlayerState.idle:
-			idle_state(delta)
-		PlayerState.walk:
-			walk_state(delta)
-		PlayerState.jump:
-			jump_state(delta)
-		PlayerState.fall:
-			fall_state(delta)
-		PlayerState.duck:
-			duck_state(delta)
-		PlayerState.slide:
-			slide_state(delta)
-		PlayerState.dead:
-			dead_state(delta)
-		PlayerState.dance:
-			dance_state(delta)
-			
+		velocity += get_gravity() * _delta
 	move_and_slide()
 
 # ================================================================
-# TROCA DE COMPORTAMENTOS -> STATUS (go_to)
-
-# GO_TO IDLE STATE
-func go_to_idle_state():
-	status = PlayerState.idle
-	anim.play("idle")
-	
-# GO_TO WALK STATE
-func go_to_walk_state():
-	status = PlayerState.walk
-	anim.play("walk")
-	
-# GO_TO JUMP STATE
-func go_to_jump_state():
-	status = PlayerState.jump
-	anim.play("jump")
-	velocity.y = JUMP_VELOCITY
-	jump_count += 1
-	
-# GO_TO FALL STATE
-func go_to_fall_state():
-	status = PlayerState.fall
-	anim.play("fall")
-	
-# GO_TO e EXIT FROM -> DUCK STATE
-func go_to_duck_state():
-	status = PlayerState.duck
-	anim.play("duck")
-	set_small_collider()
-
-func exit_from_duck_state():
-	set_large_collider()
-
-# GO_TO e EXIT FROM -> SLIDE STATE
-func go_to_slide_state():
-	status = PlayerState.slide
-	anim.play("slide")
-	set_small_collider()
-	velocity.x = direction * get_slide_speed()
-	
-func exit_from_slide_state():
-	set_large_collider()
-	
-# GO_TO DEAD STATE
-func go_to_dead_state():
-	status = PlayerState.dead
-	anim.play("dead")
-	velocity.x = 0
-	reload_timer.start()
-	
-func go_to_dance_state():
-	status = PlayerState.dance
-	anim.play("dance")
-
+# COLISÃO COM INIMIGOS E ÁREAS LETAIS
 # ================================================================
-# ESTADOS DO PLAYER (MODIFICAÇÃO CONFORME AS AÇÕES NO JOGO)
-
-# IDLE STATE
-func idle_state(delta):
-	move(delta)
-	walking()
-	jumping()
-	ducking()
-	dancing()
-		
-# WALK STATE
-func walk_state(delta):
-	move(delta)
-	dancing()
-	jumping()
-	stopping()
-	sliding()
-	
-	if not is_on_floor():
-		jump_count += 1
-		go_to_fall_state()
-		return
-	
-# JUMP STATE
-func jump_state(delta):
-	move(delta)
-	dancing()
-	
-	if Input.is_action_just_pressed("jump") and can_jump():
-		go_to_jump_state()
-		return
-		
-	if velocity.y > 0:
-		go_to_fall_state()
-		return
-
-# FALL STATE
-func fall_state(delta):
-	move(delta)
-	dancing()
-	
-	if Input.is_action_just_pressed("jump") and can_jump():
-		go_to_jump_state()
-		return
-	
-	if is_on_floor():
-		jump_count = 0
-		
-		if velocity.x == 0:
-			go_to_idle_state()
-		else:
-			go_to_walk_state()
-		return
-
-# DUCK STATE
-func duck_state(_delta):
-	update_direction()
-	
-	if Input.is_action_just_released("duck"):
-		exit_from_duck_state()
-		go_to_idle_state()
-		return
-		
-func slide_state(delta):
-	velocity.x = move_toward(velocity.x, 0, slide_deceleration * delta)
-	
-	if Input.is_action_just_released("slide") or velocity.x == 0:
-		exit_from_slide_state()
-		go_to_walk_state()
-		return
-		
-func dead_state(_delta):
-	pass
-	
-func dance_state(delta):
-	move(delta)
-	jumping()
-	
-	if anim.frame == 13:
-		go_to_idle_state()
-		return
-	
-# ================================================================
-# TRATATIVA DE COLISÃO COM O INIMIGO OU PROJETEIS
-
 func _on_hit_box_area_entered(area: Area2D) -> void:
 	if area.is_in_group("Enemies"):
 		hit_enemy(area)
 	elif area.is_in_group("LethalArea"):
 		hit_lethal_area()
 
-func hit_enemy(area: Area2D):
-	if status == PlayerState.slide:
+func hit_enemy(area: Area2D) -> void:
+	# Slide mata o inimigo
+	if state_machine.current_state == slide_state:
 		area.get_parent().take_damage()
-		return	
+		return
 
+	# Quicou em cima do inimigo
 	if velocity.y > 0:
 		area.get_parent().take_damage()
-		go_to_jump_state()
+		state_machine.transition_to(jump_state)
 	else:
-		if status != PlayerState.dead:
-			go_to_dead_state()
-	
-func hit_lethal_area():
-	go_to_dead_state()
+		if state_machine.current_state != dead_state:
+			state_machine.transition_to(dead_state)
+
+func hit_lethal_area() -> void:
+	state_machine.transition_to(dead_state)
 
 # ================================================================
-# FUNÇÕES AUXILIARES
+# FUNÇÕES AUXILIARES — usadas pelos estados
+# ================================================================
 
-# PRIMEIRO ATUALIZA A DIREAÇÃO E EM SEGUIDA REALIZA O MOVIMENTO
-func move(delta):
-	update_direction()
-
-	if direction:
-		velocity.x = move_toward(velocity.x, direction * max_speed, acceleration * delta)
-	else:
-		velocity.x = move_toward(velocity.x, 0, deceleration * delta)
-		
-# ATUALIZAR DIREÇÃO (DIREITA / ESQUERDA)
-func update_direction():
+# Atualiza direção e flip do sprite
+func update_direction() -> void:
 	direction = Input.get_axis("left", "right")
 
 	if direction < 0:
@@ -249,60 +102,48 @@ func update_direction():
 	elif direction > 0:
 		anim.flip_h = false
 
-# RETORNA SE É POSSIVEL PULAR (DOUBLE JUMP OU MAIS)
+# Movimento horizontal com aceleração/desaceleração
+func move(delta: float) -> void:
+	update_direction()
+
+	if not is_zero_approx(direction):
+		velocity.x = move_toward(velocity.x, direction * max_speed, acceleration * delta)
+	else:
+		velocity.x = move_toward(velocity.x, 0.0, deceleration * delta)
+
+# Verifica se pode pular (double jump ou mais)
 func can_jump() -> bool:
 	return jump_count < max_jump_count
 
-# COLISOR PEQUENO (AGACHADO / SLIDE)
-func set_small_collider():
+# Executa o pulo — chamado pelo JumpState e FallState
+func do_jump() -> void:
+	velocity.y = jump_velocity
+	jump_count += 1
+	anim.play("jump")
+
+# Colider pequeno (agachado / slide)
+func set_small_collider() -> void:
 	collision_shape.shape.radius = 5
 	collision_shape.shape.height = 10
 	collision_shape.position.y = 3
-	
+
 	hitbox_collision_shape.shape.size.y = 12
 	hitbox_collision_shape.position.y = 2
-	
-# COLISOR ORIGINAL (IDLE / WALK / ...)
-func set_large_collider():
+
+# Colider original (idle / walk / ...)
+func set_large_collider() -> void:
 	collision_shape.shape.radius = 6
 	collision_shape.shape.height = 16
 	collision_shape.position.y = 0
-	
+
 	hitbox_collision_shape.shape.size.y = 16
 	hitbox_collision_shape.position.y = 0
 
-func get_slide_speed():
+func get_slide_speed() -> float:
 	return max_speed * slide_multiplicator
 
+# ================================================================
+# RELOAD DA CENA AO MORRER
+# ================================================================
 func _on_reload_timer_timeout() -> void:
 	get_tree().reload_current_scene()
-	
-func dancing():
-	if Input.is_action_just_pressed("dance"):
-		go_to_dance_state()
-		return
-		
-func walking():
-	if velocity.x != 0:
-		go_to_walk_state()
-		return
-	
-func jumping():
-	if Input.is_action_just_pressed("jump"):
-		go_to_jump_state()
-		return
-		
-func ducking():
-	if Input.is_action_just_pressed("duck"):
-		go_to_duck_state()
-		return
-	
-func stopping():
-	if velocity.x == 0:
-		go_to_idle_state()
-		return
-		
-func sliding():
-	if Input.is_action_just_pressed("slide"):
-		go_to_slide_state()
-		return

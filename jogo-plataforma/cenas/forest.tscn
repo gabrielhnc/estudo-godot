@@ -83,7 +83,7 @@ metadata/_edit_vertical_guides_ = [1204.0, 5.0]
 [node name="Entities" type="Node" parent="." unique_id=734144342]
 
 [node name="Player" parent="Entities" unique_id=1259058155 instance=ExtResource("1_v3mdc")]
-z_index = 1
+z_index = -2
 position = Vector2(14, 184)
 
 [node name="Camera" parent="Entities" unique_id=1344386041 instance=ExtResource("9_eagp0")]
